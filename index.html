@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rounding with Nugget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --nugget-brown: #8D6E63;
+            --nugget-dark: #5D4037;
+            --nugget-cream: #FFF8E1;
+            --nugget-accent: #FFB74D;
+            --grass-green: #66BB6A;
+            --sage-bg: #E8F5E9;
+            --sage-border: #A5D6A7;
+            --text-dark: #4E342E;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f7f3e8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            color: var(--text-dark);
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 95%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(141, 110, 99, 0.2);
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            border: 4px solid var(--nugget-cream);
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px dashed #eee;
+            padding-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 { margin: 0; color: var(--nugget-brown); font-size: 1.6rem; font-weight: 700; margin-right: 20px;}
+
+        /* Mode Selection UI */
+        .mode-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .mode-toggle-btn {
+            background: #efebe9;
+            border: 2px solid #d7ccc8;
+            color: var(--nugget-dark);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-toggle-btn.active {
+            background: var(--nugget-brown);
+            color: white;
+            border-color: var(--nugget-brown);
+        }
+
+        .level-checks {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: #FFFDE7;
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid #FFF59D;
+        }
+
+        .level-checks label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--nugget-dark);
+        }
+        
+        input[type="checkbox"] {
+            accent-color: var(--nugget-brown);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        /* Score Counter */
+        #score-display {
+            background: var(--nugget-dark);
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+
+        /* Custom Mode Panel */
+        #custom-panel {
+            display: none;
+            background: var(--nugget-cream);
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            border: 2px solid #ffe0b2;
+        }
+        
+        .custom-group label { font-weight: 700; color: var(--nugget-brown); }
+        #cust-num { padding: 6px; border-radius: 10px; border: 2px solid #ffe0b2; width: 90px; font-family: 'Quicksand'; }
+        select {
+             padding: 6px 10px; border-radius: 10px; border: 2px solid #ffe0b2; 
+             font-family: 'Quicksand'; font-weight: 700; color: var(--nugget-brown);
+        }
+
+        /* Instructions */
+        #instructions {
+            background: var(--sage-bg);
+            color: var(--nugget-dark);
+            padding: 15px 25px;
+            border-radius: 25px;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border: 3px solid var(--sage-border);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+            line-height: 1.5;
+        }
+        
+        .mode-backward #instructions { 
+            background: #FFF3E0; 
+            border-color: #FFCC80;
+            color: #E65100;
+        }
+
+        .highlight { 
+            font-weight: 800; 
+            color: var(--nugget-dark);
+            background: rgba(255, 183, 77, 0.3);
+            padding: 2px 8px; 
+            border-radius: 8px;
+            margin: 0 4px;
+        }
+        
+        .highlight-green { 
+            font-weight: 800; 
+            color: #2E7D32; 
+            background: rgba(102, 187, 106, 0.2); 
+            padding: 2px 8px; 
+            border-radius: 8px;
+            margin: 0 4px;
+        }
+
+        #canvas-container {
+            position: relative;
+            flex-grow: 1;
+            background: #ffffff;
+            border: 4px solid var(--nugget-brown);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: inset 0 0 30px rgba(141, 110, 99, 0.1);
+            min-height: 300px;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+        #scale-label {
+            position: absolute;
+            bottom: 20px;
+            right: 25px;
+            font-size: 3rem;
+            font-weight: 900;
+            color: rgba(0,0,0,0.04);
+            pointer-events: none;
+            text-transform: uppercase;
+            user-select: none;
+            white-space: nowrap;
+            transition: color 0.3s, opacity 0.3s;
+        }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        button.action-btn {
+            border: none;
+            padding: 12px 28px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Quicksand', sans-serif;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+        }
+        button.action-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        .btn-zoom { background-color: var(--nugget-brown); color: white; }
+        .btn-zoom:hover { background-color: #6D4C41; }
+        
+        .btn-new { background-color: var(--grass-green); color: white; }
+        .btn-new:hover { background-color: #43A047; }
+        
+        .btn-vis { background-color: var(--nugget-accent); color: white; }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #efebe9;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid #d7ccc8;
+        }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--nugget-brown); }
+        input:checked + .slider:before { transform: translateX(20px); }
+        
+        #feedback-toast {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            padding: 15px 30px;
+            color: white;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+            z-index: 100;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #feedback-toast.show { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+        #feedback-toast.correct { background: var(--grass-green); }
+        #feedback-toast.wrong { background: #e57373; }
+
+        /* MODALS & CERTIFICATE */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 5px solid var(--nugget-accent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .modal-content h2 { color: var(--nugget-brown); margin-top: 0; }
+        .name-input {
+            width: 80%; padding: 10px; font-size: 1.2rem;
+            margin: 15px 0; border: 2px solid #ccc; border-radius: 10px;
+            font-family: 'Quicksand'; text-align: center;
+        }
+
+        /* Certificate View */
+        #certificate-container {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff;
+            z-index: 2000;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .cert-paper {
+            width: 900px; height: 640px; /* Landscapeish */
+            border: 20px double var(--nugget-brown);
+            padding: 40px;
+            position: relative;
+            background: #FFFDE7; /* Cream */
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            color: var(--nugget-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .cert-title { font-family: 'Dancing Script', cursive; font-size: 4rem; margin: 10px 0; color: var(--nugget-brown); }
+        .cert-body { font-size: 1.5rem; margin: 20px 0; }
+        .cert-name { font-size: 2.5rem; font-weight: bold; border-bottom: 2px solid var(--nugget-brown); display: inline-block; padding: 0 20px; margin: 10px 0; color: #E65100; }
+        .skills-list { list-style: none; padding: 0; margin: 20px auto; text-align: left; width: fit-content; font-size: 1.2rem; }
+        .skills-list li { margin: 5px 0; }
+        .skills-list li:before { content: "🌰 "; }
+        
+        .cert-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; }
+        .sig-block { text-align: center; }
+        .sig-line { border-top: 2px solid var(--nugget-dark); margin-top: 50px; padding-top: 5px; font-weight: bold;}
+        .paw-print { font-size: 3rem; color: var(--nugget-brown); transform: rotate(-10deg); display:block; margin-bottom:-15px; }
+        
+        .cert-nugget-img { width: 150px; }
+        .cert-date { font-size: 0.9rem; color: #777; margin-top: 10px;}
+
+        .cert-controls { margin-top: 20px; display: flex; gap: 20px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #certificate-container, #certificate-container * { visibility: visible; }
+            #certificate-container { 
+                position: fixed; 
+                left: 0; 
+                top: 0; 
+                width: 100vw; 
+                height: 100vh; 
+                background: white; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                padding: 0;
+                margin: 0;
+                z-index: 9999;
+            }
+            .cert-paper { 
+                /* Shrink cert to ensure print padding */
+                width: 90% !important; 
+                height: 85% !important; 
+                box-shadow: none; 
+                border-width: 15px; 
+                margin: auto; 
+                page-break-after: avoid; 
+                print-color-adjust: exact; 
+                -webkit-print-color-adjust: exact;
+            }
+            .cert-controls { display: none; }
+            @page { margin: 0; size: landscape; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <div class="top-bar">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <h1>🐹 Rounding with Nugget</h1>
+            <div id="score-display">🌰 0 / 10</div>
+        </div>
+        
+        <div class="mode-controls">
+            <div style="display:flex; gap:5px;">
+                <button id="mode-game-btn" class="mode-toggle-btn active" onclick="game.setGameMode('game')">Play Mode</button>
+                <button id="mode-sandbox-btn" class="mode-toggle-btn" onclick="game.setGameMode('custom')">Sandbox</button>
+            </div>
+
+            <div id="level-selector" class="level-checks">
+                <label><input type="checkbox" value="level1" checked onchange="game.updateLevels()"> Big Numbers</label>
+                <label><input type="checkbox" value="level2" onchange="game.updateLevels()"> Decimals</label>
+                <label><input type="checkbox" value="level3" onchange="game.updateLevels()"> Sig Figs</label>
+                <label><input type="checkbox" value="backward" onchange="game.updateLevels()"> Challenge</label>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-panel">
+        <div class="custom-group">
+            <label>Number:</label>
+            <input type="number" id="cust-num" value="1234.5">
+        </div>
+        
+        <div class="custom-group">
+            <label>Mode:</label>
+            <select id="cust-category" onchange="game.updateCustomUI()">
+                <option value="power">Nearest Power of 10</option>
+                <option value="dp">Decimal Places (dp)</option>
+                <option value="sf">Significant Figures</option>
+            </select>
+        </div>
+
+        <div class="custom-group">
+            <label>Target:</label>
+            <select id="cust-detail"></select>
+        </div>
+
+        <button class="action-btn btn-vis" onclick="game.newGame()">Move Nugget</button>
+    </div>
+
+    <div id="instructions">Loading Nugget...</div>
+
+    <div id="canvas-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="scale-label">ONES</div>
+        <div id="feedback-toast">Correct!</div>
+    </div>
+
+    <div class="controls">
+        <button class="action-btn btn-zoom" onclick="game.zoomOut()">- Zoom Out</button>
+        <div class="toggle-container" id="boundary-control">
+            <label class="switch">
+                <input type="checkbox" id="boundary-toggle" onchange="game.toggleBoundaries()">
+                <span class="slider"></span>
+            </label>
+            <span style="font-weight:600; color:#5d4037; font-size: 0.9rem;">Show Boundaries</span>
+        </div>
+        <button class="action-btn btn-zoom" onclick="game.zoomIn()">+ Zoom In</button>
+    </div>
+    
+    <div class="controls" style="margin-top:10px">
+        <button class="action-btn btn-new" onclick="game.newGame()">New Acorn Hunt</button>
+    </div>
+</div>
+
+<div id="win-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h1>🎉 Amazing! 🎉</h1>
+        <p>You collected 10 Acorns!</p>
+        <p>Nugget is so happy.</p>
+        
+        <input type="text" id="student-name" class="name-input" placeholder="Enter your name here">
+        
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+            <button class="action-btn btn-vis" onclick="game.claimCertificate()">🎓 Claim Certificate</button>
+            <button class="action-btn" style="background:#ddd; color:#333" onclick="game.continuePlaying()">Just Keep Playing</button>
+        </div>
+    </div>
+</div>
+
+<div id="certificate-container">
+    <div class="cert-paper">
+        <div>
+            <div class="cert-title">Certificate of Achievement</div>
+            <div class="cert-body">
+                This is to certify that<br>
+                <span id="cert-name-display" class="cert-name">Student Name</span><br>
+                has successfully helped Nugget find 10 Acorns!
+            </div>
+            
+            <p style="font-weight:bold; color:#5D4037;">Skills Demonstrated:</p>
+            <ul id="cert-skills" class="skills-list">
+                </ul>
+        </div>
+
+        <div class="cert-footer">
+            <div style="text-align:left">
+                <img src="Nugget.png" class="cert-nugget-img">
+            </div>
+            <div class="sig-block">
+                <span class="paw-print">🐾 🐾</span>
+                <div class="sig-line">Nugget the Hamster</div>
+            </div>
+        </div>
+        <div id="cert-timestamp" class="cert-date"></div>
+    </div>
+    
+    <div class="cert-controls">
+        <button class="action-btn btn-new" onclick="window.print()">🖨️ Print / Save PDF</button>
+        <button class="action-btn" style="background:#ddd; color:#333" onclick="game.closeCertificate()">Back to Game</button>
+    </div>
+</div>
+
+<script>
+
+class ScenarioGenerator {
+    
+    // --- LEVEL 1: Large Numbers ---
+    generateLevel1() {
+        const magExp = Math.floor(Math.random() * 4) + 3; 
+        const minVal = Math.pow(10, magExp);
+        const maxVal = Math.pow(10, magExp + 1) - 1;
+        let val = Math.floor(minVal + Math.random() * (maxVal - minVal));
+
+        const roundPower = Math.floor(Math.random() * magExp) + 1; 
+        
+        const step = Math.pow(10, roundPower);
+        if (Math.abs((val % step) - (step/2)) < step/20) val += step/10;
+        
+        return { val, roundPower, type: 'place', label: null };
+    }
+
+    // --- LEVEL 2: Decimals ---
+    generateLevel2() {
+        const roundPower = -(Math.floor(Math.random() * 4)); 
+        const val = Math.random() * 100;
+        return { val: this.fixFloat(val, 5), roundPower, type: 'place', label: null };
+    }
+
+    // --- LEVEL 3: Significant Figures ---
+    generateLevel3() {
+        const exponent = Math.floor(Math.random() * 10) - 3; 
+        let val = Math.random() * Math.pow(10, exponent);
+        if (val === 0) val = 1.2345;
+
+        const sigFigs = Math.floor(Math.random() * 3) + 1;
+        
+        const mag = Math.floor(Math.log10(Math.abs(val)));
+        const roundPower = mag - (sigFigs - 1);
+
+        let precision = Math.abs(roundPower) + 3;
+        if (roundPower > 0) precision = 0;
+
+        return { 
+            val: this.fixFloat(val, precision), 
+            roundPower, 
+            type: 'sigfig', 
+            sigFigs,
+            label: null 
+        };
+    }
+
+    // --- BACKWARD MODE ---
+    generateBackward() {
+        const scenario = Math.random() > 0.5 ? this.generateLevel1() : this.generateLevel2();
+        
+        const step = Math.pow(10, scenario.roundPower);
+        const inv = 1/step;
+        const rounded = Math.round(scenario.val * inv) / inv;
+
+        return {
+            originalVal: scenario.val,
+            roundedVal: rounded,
+            roundPower: scenario.roundPower,
+            type: 'backward'
+        };
+    }
+
+    fixFloat(num, places) {
+        return parseFloat(num.toFixed(places));
+    }
+
+    getTaskName(power, type, sigFigs) {
+        if (type === 'sigfig') {
+            return `${sigFigs} Significant Figure${sigFigs > 1 ? 's' : ''}`;
+        }
+        
+        if (power >= 0) {
+            const map = {
+                6: "million", 5: "hundred thousand", 4: "ten thousand",
+                3: "thousand", 2: "hundred", 1: "ten", 0: "whole number"
+            };
+            return map[power] || `10^${power}`;
+        } else {
+            const map = {
+                "-1": "tenth (1 decimal place)", "-2": "hundredth (2 decimal places)", 
+                "-3": "thousandth (3 decimal places)", "-4": "ten thousandth"
+            };
+            return map[power] || `10^${power}`;
+        }
+    }
+}
+
+class RoundingGame {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.scaleLabel = document.getElementById('scale-label');
+        this.feedbackEl = document.getElementById('feedback-toast');
+        this.instructionsEl = document.getElementById('instructions');
+        this.scoreDisplay = document.getElementById('score-display');
+        
+        this.generator = new ScenarioGenerator();
+
+        this.nuggetImg = new Image();
+        this.nuggetImg.src = 'Nugget.png'; 
+        this.nuggetImg.onload = () => this.draw(); 
+
+        this.dpr = window.devicePixelRatio || 1;
+        this.updateDimensions();
+
+        // Game State
+        this.gameMode = 'game'; 
+        this.activeLevels = ['level1']; 
+        this.score = 0;
+        this.winningScore = 10;
+        
+        this.isBackwardTurn = false;
+        this.showBoundaries = false;
+        
+        this.basePixelsPerUnit = 150;
+        this.currentZoomExp = 0;
+        this.targetZoomExp = 0;
+
+        this.targetVal = 0;
+        this.displayVal = 0; 
+        this.requiredStepExp = 0;
+        
+        this.selectedBoundaries = []; 
+
+        this.setupEvents();
+        this.updateCustomUI(); 
+        this.updateScoreUI();
+        
+        // Initial start
+        this.newGame();
+        
+        this.frameCount = 0;
+        requestAnimationFrame(() => this.loop());
+    }
+
+    updateDimensions() {
+        this.rect = this.canvas.getBoundingClientRect();
+        this.canvas.width = this.rect.width * this.dpr;
+        this.canvas.height = this.rect.height * this.dpr;
+        this.ctx.scale(this.dpr, this.dpr);
+        this.width = this.rect.width;
+        this.height = this.rect.height;
+    }
+
+    setGameMode(mode) {
+        this.gameMode = mode;
+        this.score = 0;
+        this.updateScoreUI();
+        
+        // Update UI
+        document.getElementById('mode-game-btn').classList.toggle('active', mode === 'game');
+        document.getElementById('mode-sandbox-btn').classList.toggle('active', mode === 'custom');
+        
+        document.getElementById('level-selector').style.display = (mode === 'game') ? 'flex' : 'none';
+        document.getElementById('custom-panel').style.display = (mode === 'custom') ? 'flex' : 'none';
+        document.getElementById('score-display').style.visibility = (mode === 'game') ? 'visible' : 'hidden';
+        
+        this.newGame();
+    }
+
+    updateLevels() {
+        const checks = document.querySelectorAll('#level-selector input[type="checkbox"]');
+        const selected = Array.from(checks).filter(c => c.checked).map(c => c.value);
+        
+        if (selected.length === 0) {
+            document.querySelector('input[value="level1"]').checked = true;
+            this.activeLevels = ['level1'];
+        } else {
+            this.activeLevels = selected;
+        }
+    }
+    
+    updateScoreUI() {
+        this.scoreDisplay.innerText = `🌰 ${this.score} / ${this.winningScore}`;
+    }
+
+    toggleBoundaries() {
+        if(this.isBackwardTurn) return;
+        this.showBoundaries = document.getElementById('boundary-toggle').checked;
+        this.draw();
+    }
+
+    newGame() {
+        this.selectedBoundaries = [];
+        this.clickedTick = null;
+        const wrapper = document.getElementById('game-wrapper');
+
+        let sc;
+        let modeType = 'level1'; 
+
+        if (this.gameMode === 'custom') {
+            sc = this.getCustomScenario();
+            this.isBackwardTurn = false;
+        } else {
+            // Pick a random level from checked boxes
+            modeType = this.activeLevels[Math.floor(Math.random() * this.activeLevels.length)];
+            
+            switch(modeType) {
+                case 'level1': sc = this.generator.generateLevel1(); this.isBackwardTurn = false; break;
+                case 'level2': sc = this.generator.generateLevel2(); this.isBackwardTurn = false; break;
+                case 'level3': sc = this.generator.generateLevel3(); this.isBackwardTurn = false; break;
+                case 'backward': sc = this.generator.generateBackward(); this.isBackwardTurn = true; break;
+            }
+        }
+
+        if (this.isBackwardTurn) {
+            wrapper.classList.add('mode-backward');
+            this.showBoundaries = true;
+            document.getElementById('boundary-toggle').checked = true;
+            document.getElementById('boundary-toggle').disabled = true;
+        } else {
+            wrapper.classList.remove('mode-backward');
+            this.showBoundaries = false;
+            document.getElementById('boundary-toggle').checked = false;
+            document.getElementById('boundary-toggle').disabled = false;
+        }
+
+        this.requiredStepExp = sc.roundPower;
+
+        if (this.isBackwardTurn) {
+            this.targetVal = sc.originalVal;
+            this.displayVal = sc.roundedVal; 
+            
+            const roundName = this.generator.getTaskName(sc.roundPower, 'place');
+            this.instructionsEl.innerHTML = `
+                <span>
+                    <strong>Nugget can see to the nearest</strong> <span class="highlight">${roundName}</span>. 
+                    The acorn is at <span class="highlight">${sc.roundedVal}</span>.<br>
+                    Click the left and right boundaries of that region of the number line.
+                </span>
+            `;
+        } else {
+            this.targetVal = sc.val;
+            this.displayVal = sc.val; 
+            const name = this.generator.getTaskName(this.requiredStepExp, sc.type, sc.sigFigs);
+            
+            this.instructionsEl.innerHTML = `
+                <span>Nugget is at <span class="highlight">${sc.val}</span>. The acorn is at the nearest <span class="highlight-green">${name}</span>.</span>
+            `;
+        }
+
+        this.targetZoomExp = 0;
+        this.currentZoomExp = 0;
+        this.updateScaleLabel(); 
+    }
+
+    getCustomScenario() {
+        const num = parseFloat(document.getElementById('cust-num').value) || 123.45;
+        const cat = document.getElementById('cust-category').value;
+        const detail = parseInt(document.getElementById('cust-detail').value);
+        
+        let roundPower = 0;
+        let sigFigs = null;
+        let type = 'place';
+
+        if (cat === 'power') {
+            roundPower = detail; 
+        } else if (cat === 'dp') {
+            roundPower = -detail; 
+        } else if (cat === 'sf') {
+            type = 'sigfig';
+            sigFigs = detail;
+            const mag = Math.floor(Math.log10(Math.abs(num === 0 ? 1 : num)));
+            roundPower = mag - (sigFigs - 1);
+        }
+
+        return { val: num, roundPower, type, sigFigs };
+    }
+
+    updateCustomUI() {
+        const cat = document.getElementById('cust-category').value;
+        const detailSel = document.getElementById('cust-detail');
+        detailSel.innerHTML = ''; 
+
+        if (cat === 'power') {
+            const opts = [
+                {v: 0, t: "Whole Number"}, {v: 1, t: "Ten"}, {v: 2, t: "Hundred"},
+                {v: 3, t: "Thousand"}, {v: 4, t: "Ten Thousand"}, {v: 5, t: "Hundred Thousand"},
+                {v: 6, t: "Million"}
+            ];
+            opts.forEach(o => {
+                const op = document.createElement('option');
+                op.value = o.v; op.text = o.t;
+                detailSel.appendChild(op);
+            });
+        } else {
+            for(let i=1; i<=4; i++) {
+                const op = document.createElement('option');
+                op.value = i; op.text = i;
+                detailSel.appendChild(op);
+            }
+        }
+    }
+
+    valToX(val) {
+        const centerX = this.width / 2;
+        const diff = val - this.displayVal; 
+        const scaleFactor = Math.pow(10, -this.currentZoomExp);
+        const pixelsPerUnit = this.basePixelsPerUnit * scaleFactor;
+        return centerX + (diff * pixelsPerUnit);
+    }
+
+    zoomIn() { this.targetZoomExp -= 1; this.limitZoom(); }
+    zoomOut() { this.targetZoomExp += 1; this.limitZoom(); }
+    
+    limitZoom() {
+        const minZ = this.requiredStepExp - 3;
+        const maxZ = this.requiredStepExp + 3;
+        this.targetZoomExp = Math.max(-6, Math.min(9, Math.max(minZ, Math.min(maxZ, this.targetZoomExp))));
+    }
+
+    loop() {
+        this.frameCount++;
+        const diff = this.targetZoomExp - this.currentZoomExp;
+        const friction = 0.04; 
+
+        if (Math.abs(diff) > 0.001) {
+            this.currentZoomExp += diff * friction;
+            this.updateScaleLabel();
+        } else {
+            this.currentZoomExp = this.targetZoomExp;
+            this.updateScaleLabel();
+        }
+        this.draw();
+        requestAnimationFrame(() => this.loop());
+    }
+
+    draw() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.hitRegions = [];
+        
+        const centerY = this.height / 2;
+        
+        // Draw the line
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, centerY);
+        this.ctx.lineTo(this.width, centerY);
+        this.ctx.strokeStyle = '#8D6E63';
+        this.ctx.lineWidth = 4;
+        this.ctx.stroke();
+
+        const coarse = Math.ceil(this.currentZoomExp);
+        const fine = Math.floor(this.currentZoomExp);
+        const opacity = 1 - (this.currentZoomExp - fine);
+
+        this.drawLayer(coarse, 1.0, true);
+        if (opacity > 0.01) this.drawLayer(fine, opacity, false);
+
+        // Draw Range highlight for Backward mode
+        if (this.isBackwardTurn && this.selectedBoundaries.length === 2) {
+            const minB = Math.min(...this.selectedBoundaries);
+            const maxB = Math.max(...this.selectedBoundaries);
+            const x1 = this.valToX(minB);
+            const x2 = this.valToX(maxB);
+            this.ctx.fillStyle = "rgba(102, 187, 106, 0.3)";
+            this.ctx.fillRect(x1, centerY - 25, x2 - x1, 50);
+            this.ctx.strokeStyle = "#43A047";
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(x1, centerY - 25, x2 - x1, 50);
+        }
+
+        if (this.isBackwardTurn) {
+             this.drawHamster(this.displayVal, centerY, "Acorn");
+        } else {
+             this.drawHamster(this.displayVal, centerY, "Nugget");
+        }
+        
+        const exactX = this.valToX(this.displayVal);
+        const exactY = centerY + 70;
+        
+        this.ctx.font = 'bold 15px Quicksand';
+        this.ctx.fillStyle = '#5D4037';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(this.displayVal.toString(), exactX, exactY);
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(exactX, exactY - 15);
+        this.ctx.lineTo(exactX, exactY - 20);
+        this.ctx.strokeStyle = '#5D4037';
+        this.ctx.lineWidth = 1;
+        this.ctx.stroke();
+    }
+
+    drawLayer(exponent, opacity, isMain) {
+        const step = Math.pow(10, exponent);
+        const viewRad = (this.width/2) / (Math.pow(10, -this.currentZoomExp) * this.basePixelsPerUnit);
+        
+        const start = Math.floor((this.displayVal - viewRad)/step)*step;
+        const end = this.displayVal + viewRad + step;
+
+        this.ctx.textAlign = 'center';
+        
+        let count = 0;
+        for (let t = start; t < end; t += step) {
+            if (count++ > 200) break;
+            const val = parseFloat(t.toFixed(Math.abs(Math.min(0, exponent))));
+            
+            if (!isMain) {
+                const pStep = step * 10;
+                if (Math.abs(val % pStep) < step/1000 || Math.abs(val%pStep - pStep) < step/1000) continue;
+            }
+
+            const x = this.valToX(val);
+            const y = this.height / 2;
+
+            if (!this.isBackwardTurn) {
+                this.drawStandardTick(x, y, val, step, opacity, exponent);
+            } else {
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, 6, 0, Math.PI*2);
+                this.ctx.fillStyle = `rgba(141, 110, 99,${opacity})`;
+                this.ctx.fill();
+                
+                if(opacity > 0.4) {
+                    this.ctx.fillStyle = `rgba(93, 64, 55,${opacity})`;
+                    this.ctx.font = 'bold 14px Quicksand';
+                    let lbl = val.toString();
+                    if(exponent < 0) lbl = val.toFixed(Math.abs(exponent));
+                    this.ctx.fillText(lbl, x, y+35);
+                }
+            }
+
+            if (this.showBoundaries) {
+                this.drawBoundary(val, step, x, y, exponent, opacity);
+            }
+        }
+    }
+
+    drawStandardTick(x, y, val, step, opacity, exponent) {
+        if (this.clickedTick && Math.abs(this.clickedTick.val - val) < step/1000 && this.clickedTick.isCorrect) {
+            this.ctx.font = '30px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.globalAlpha = opacity;
+            this.ctx.fillText('🌰', x, y + 2); 
+            this.ctx.globalAlpha = 1;
+            
+            if (opacity > 0.4) {
+                this.ctx.fillStyle = `rgba(78, 52, 46, ${opacity})`;
+                this.ctx.font = 'bold 16px "Quicksand"';
+                let labelText = val.toString();
+                if (exponent < 0) labelText = val.toFixed(Math.abs(exponent));
+                this.ctx.fillText(labelText, x, y + 35);
+            }
+            return; 
+        }
+
+        let color = '#fff';
+        let stroke = '#8D6E63';
+        let r = 8;
+        let lineWidth = 2;
+
+        if (this.clickedTick && Math.abs(this.clickedTick.val - val) < step/1000 && !this.clickedTick.isCorrect) {
+            color = '#EF5350'; 
+            stroke = color;
+            r = 14;
+            lineWidth = 4;
+        }
+
+        this.ctx.globalAlpha = opacity;
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y - 10);
+        this.ctx.lineTo(x, y + 10);
+        this.ctx.strokeStyle = stroke;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.stroke();
+
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, r, 0, Math.PI*2);
+        this.ctx.fillStyle = color;
+        this.ctx.fill();
+        this.ctx.strokeStyle = stroke;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.stroke();
+
+        if (opacity > 0.4) {
+            this.ctx.fillStyle = `rgba(78, 52, 46, ${opacity})`;
+            this.ctx.font = 'bold 16px "Quicksand"';
+            
+            let labelText = val.toString();
+            if (exponent < 0) labelText = val.toFixed(Math.abs(exponent));
+            this.ctx.fillText(labelText, x, y + 35);
+        }
+
+        if (opacity > 0.5) {
+            this.hitRegions.push({ type: 'tick', x, y, r: 25, val, step });
+        }
+        this.ctx.globalAlpha = 1;
+    }
+
+    drawBoundary(val, step, x, y, exponent, opacity) {
+        const bVal = val + (step/2);
+        const bx = this.valToX(bVal);
+        
+        const isSelected = this.selectedBoundaries.some(b => Math.abs(b - bVal) < step/1000);
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(bx, y - 30);
+        this.ctx.lineTo(bx, y + 30);
+        this.ctx.lineWidth = isSelected ? 4 : 2;
+        this.ctx.strokeStyle = isSelected ? '#8E24AA' : `rgba(141, 110, 99, ${opacity})`;
+        if (!isSelected) this.ctx.setLineDash([6, 6]);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+
+        if (opacity > 0.4) {
+             const prec = Math.abs(Math.min(0, exponent - 1));
+             const bText = bVal.toFixed(prec);
+             this.ctx.font = isSelected ? 'bold 15px Quicksand' : 'italic 13px Quicksand';
+             this.ctx.fillStyle = isSelected ? '#8E24AA' : `rgba(141, 110, 99, ${opacity})`;
+             this.ctx.fillText(bText, bx, y + 60);
+        }
+
+        if (this.isBackwardTurn && opacity > 0.5) {
+             this.hitRegions.push({ type: 'boundary', x: bx, y: y, r: 25, val: bVal, step });
+        }
+    }
+
+    drawHamster(val, y, label) {
+        const x = this.valToX(val);
+        const bounce = Math.sin(this.frameCount * 0.05) * 5;
+        const size = 90; 
+        const imgBottom = y - 50 - bounce;
+        const imgTop = imgBottom - size; 
+        const imgX = x - size/2;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, imgBottom + 5); 
+        this.ctx.lineTo(x - 10, imgBottom - 10);
+        this.ctx.lineTo(x + 10, imgBottom - 10);
+        this.ctx.fillStyle = '#8D6E63';
+        this.ctx.fill();
+        
+        this.ctx.beginPath();
+        this.ctx.setLineDash([4, 4]);
+        this.ctx.moveTo(x, imgBottom + 5);
+        this.ctx.lineTo(x, y - 5);
+        this.ctx.strokeStyle = '#8D6E63';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+
+        if (this.isBackwardTurn) {
+            this.ctx.font = '60px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('🌰', x, imgBottom - 40);
+        } else {
+            if (this.nuggetImg.complete) {
+                this.ctx.drawImage(this.nuggetImg, imgX, imgTop, size, size);
+            } else {
+                this.ctx.fillStyle = '#FFB74D';
+                this.ctx.beginPath();
+                this.ctx.arc(x, imgBottom - size/2, 25, 0, Math.PI*2);
+                this.ctx.fill();
+            }
+        }
+    }
+
+    setupEvents() {
+        this.canvas.addEventListener('click', (e) => {
+            if (this.score >= this.winningScore) return; // Stop interaction if won
+            
+            const r = this.canvas.getBoundingClientRect();
+            const clickX = e.clientX - r.left;
+            const clickY = e.clientY - r.top;
+            
+            let closest = null;
+            let minDist = 999;
+            this.hitRegions.forEach(hit => {
+                const dist = Math.abs(clickX - hit.x); 
+                if (dist < hit.r && Math.abs(clickY - hit.y) < 60 && dist < minDist) {
+                    minDist = dist;
+                    closest = hit;
+                }
+            });
+
+            if (closest) this.handleInput(closest);
+        });
+
+        window.addEventListener('resize', () => { this.updateDimensions(); this.draw(); });
+    }
+
+    handleInput(hit) {
+        const requiredStep = Math.pow(10, this.requiredStepExp);
+        const diff = Math.abs(hit.step - requiredStep);
+        const tolerance = requiredStep / 1000;
+
+        // 1. Zoom Logic
+        if (diff > tolerance) {
+            if (hit.step > requiredStep) {
+                this.showFeedback("Nugget must be closer. Zoom in!", false);
+            } else {
+                this.showFeedback("Nugget can be further away. Zoom out!", false);
+            }
+            return;
+        }
+
+        // 2. Challenge Mode
+        if (this.isBackwardTurn) {
+            if (hit.type !== 'boundary') return;
+
+            const expectedLow = this.displayVal - (requiredStep/2);
+            const expectedHigh = this.displayVal + (requiredStep/2);
+            
+            const isLow = Math.abs(hit.val - expectedLow) < tolerance;
+            const isHigh = Math.abs(hit.val - expectedHigh) < tolerance;
+
+            if (!isLow && !isHigh) {
+                let dir = (hit.val > this.displayVal) ? "left" : "right";
+                this.showFeedback(`Nugget must be closer. Try to the ${dir}.`, false);
+                return;
+            }
+
+            const existingIdx = this.selectedBoundaries.findIndex(b => Math.abs(b - hit.val) < tolerance);
+            
+            if (existingIdx >= 0) {
+                this.selectedBoundaries.splice(existingIdx, 1); 
+            } else {
+                if (this.selectedBoundaries.length < 2) {
+                    this.selectedBoundaries.push(hit.val);
+                } else {
+                    this.selectedBoundaries.shift();
+                    this.selectedBoundaries.push(hit.val);
+                }
+            }
+
+            if (this.selectedBoundaries.length === 2) {
+                this.showFeedback("Great job! You found the range!", true);
+                this.incrementScore();
+            }
+            return;
+        }
+
+        // 3. Normal Mode
+        if (hit.type === 'tick') {
+            const inv = 1/requiredStep;
+            const correct = Math.round(this.targetVal * inv) / inv;
+            const isCorrect = Math.abs(hit.val - correct) < tolerance;
+            
+            this.clickedTick = { val: hit.val, isCorrect };
+            
+            if (isCorrect) {
+                this.showFeedback("Yay! You found the acorn!", true);
+                this.incrementScore();
+            } else {
+                const hint = hit.val < correct ? "Try higher." : "Try lower.";
+                this.showFeedback("No acorn here. " + hint, false);
+            }
+        }
+    }
+    
+    incrementScore() {
+        if (this.gameMode === 'game') {
+            this.score++;
+            this.updateScoreUI();
+            
+            if (this.score >= this.winningScore) {
+                setTimeout(() => this.showWinModal(), 1000);
+            }
+        }
+    }
+    
+    showWinModal() {
+        document.getElementById('win-modal').style.display = 'flex';
+    }
+    
+    continuePlaying() {
+        document.getElementById('win-modal').style.display = 'none';
+        this.score = 0;
+        this.updateScoreUI();
+        this.newGame();
+    }
+    
+    claimCertificate() {
+        const nameInput = document.getElementById('student-name');
+        if (!nameInput.value.trim()) {
+            alert("Please enter your name for the certificate!");
+            return;
+        }
+        
+        // Generate Cert Data
+        document.getElementById('cert-name-display').innerText = nameInput.value;
+        document.getElementById('cert-timestamp').innerText = new Date().toLocaleString();
+        
+        const skillsList = document.getElementById('cert-skills');
+        skillsList.innerHTML = '';
+        
+        const labels = {
+            'level1': 'Rounding Large Numbers',
+            'level2': 'Rounding to Decimal Places',
+            'level3': 'Rounding to Significant Figures',
+            'backward': 'Backward Rounding Challenge'
+        };
+        
+        this.activeLevels.forEach(lvl => {
+            const li = document.createElement('li');
+            li.innerText = labels[lvl] || lvl;
+            skillsList.appendChild(li);
+        });
+        
+        document.getElementById('win-modal').style.display = 'none';
+        document.getElementById('certificate-container').style.display = 'flex';
+    }
+    
+    closeCertificate() {
+        document.getElementById('certificate-container').style.display = 'none';
+        this.continuePlaying();
+    }
+
+    showFeedback(msg, success) {
+        this.feedbackEl.innerHTML = (success ? '🐹 ' : '🤔 ') + msg;
+        this.feedbackEl.className = success ? 'correct' : 'wrong';
+        this.feedbackEl.classList.add('show');
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.feedbackEl.classList.remove('show'), 2500);
+    }
+
+    updateScaleLabel() {
+        const z = Math.round(this.currentZoomExp);
+        const map = {
+            9: "Billions", 8: "Hundred Millions", 7: "Ten Millions",
+            6: "Millions", 5: "Hundred Thousands", 4: "Ten Thousands",
+            3: "Thousands", 2: "Hundreds", 1: "Tens", 0: "Ones",
+            "-1": "Tenths", "-2": "Hundredths", "-3": "Thousandths", 
+            "-4": "Ten Thousandths", "-5": "Hundred Thousandths", "-6": "Millionths"
+        };
+        
+        this.scaleLabel.innerText = map[z] || `10^${z}`;
+        
+        const dist = Math.abs(this.currentZoomExp - z);
+        this.scaleLabel.style.opacity = Math.max(0.1, 1 - dist*2);
+        
+        const isTarget = (z === this.requiredStepExp);
+        this.scaleLabel.style.color = isTarget ? "rgba(102, 187, 106, 0.25)" : "rgba(0,0,0,0.04)";
+    }
+}
+
+const game = new RoundingGame();
+</script>
+</body>
+</html>
