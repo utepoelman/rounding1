@@ -734,9 +734,10 @@ class RoundingGame {
             const roundName = this.generator.getTaskName(sc.roundPower, 'place');
             this.instructionsEl.innerHTML = `
                 <span>
-                    <strong>Nugget can see to the nearest</strong> <span class="highlight">${roundName}</span>. 
+                    <strong>Nugget can see to the nearest <span class="highlight">${roundName}</span>. 
                     The acorn is at <span class="highlight">${sc.roundedVal}</span>.<br>
-                    Click the left and right boundaries of that region of the number line.
+                    Where must Nugget start if he wants to find it? </strong><br>
+Click the left and right boundaries of that region of the number line.
                 </span>
             `;
         } else {
